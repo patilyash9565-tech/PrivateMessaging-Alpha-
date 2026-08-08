@@ -1,0 +1,89 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+     
+public class ClientHandler implements Runnable {
+
+    private Socket socket;
+    private BufferedReader reader;
+    private PrintWriter writer;
+    private int clientId;
+    private static int nextClientId = 1;
+
+    private static List<ClientHandler> clients = new ArrayList<>();
+
+    public ClientHandler(Socket socket){
+        this.socket = socket;
+
+        this.clientId = nextClientId++;
+        clients.add(this);
+
+        try{
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            writer = new PrintWriter(socket.getOutputStream(), true);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+
+
+    }
+
+
+    public static void broadcast(String message) {
+
+    for (ClientHandler client : clients) {
+        client.writer.println(message);
+    }
+    }
+    public static ClientHandler findClient(int clientId) {
+        for (ClientHandler client : clients) {
+            if (client.clientId == clientId) {
+                return client;
+            }
+        }
+        return null; // Client not found
+    }
+
+
+    @Override    
+    public void run(){
+        System.out.print("Handling client: "+ clientId + " : " + socket.getInetAddress().getHostAddress());
+
+        writer.println("Welcome to the chat server! You are connected as: " + socket.getInetAddress().getHostAddress());
+         
+
+        try {
+    String message;
+
+    while ((message = reader.readLine()) != null) {
+    System.out.println("RAW MESSAGE RECEIVED >>> " + message);
+    if (message.startsWith("/msg ")) {
+        String[] parts = message.split(" ",3);
+
+        int targetId = Integer.parseInt(parts[1]);
+        String privateMessage = parts[2];
+
+        ClientHandler targetClient = findClient(targetId);
+        if (targetClient != null) {
+            targetClient.writer.println("Private message from Client: " + clientId + ": " + privateMessage);
+        } else{
+            writer.println("Client: " + targetId + " not found.");
+        }
+    } else {       
+    broadcast("Client " + clientId + ": " + message);
+      }
+    }
+
+} catch (Exception e) {
+    e.printStackTrace();
+}
+        
+    }
+}
+
+
+
