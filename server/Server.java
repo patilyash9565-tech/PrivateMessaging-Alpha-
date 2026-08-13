@@ -3,12 +3,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+
+      static RoomManager roomManager = new RoomManager();
+
   public static void main(String[]args){
+
+    
 
     try {
         ServerSocket serverSocket = new ServerSocket(55000);
-
-
+        
         System.out.println("=====================================");
         System.out.println("Server is running on port 55000");
         System.out.println("=====================================");

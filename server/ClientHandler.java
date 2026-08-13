@@ -21,10 +21,13 @@ private boolean running = true;
 private static int nextClientId = 1;
 private static List<ClientHandler> clients = new ArrayList<>();
 
+private RoomManager roomManager;
+
 
 public ClientHandler(Socket socket) {
     this.socket = socket;
     this.clientId = nextClientId++;
+    this.roomManager = Server.roomManager;
     this.commandProcessor = new CommandProcessor(this);
     
     try {
