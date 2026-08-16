@@ -2,8 +2,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientHandler implements Runnable {
 
@@ -18,15 +19,15 @@ private CommandProcessor commandProcessor;
 
 private boolean running = true;
 
-private static int nextClientId = 1;
-private static List<ClientHandler> clients = new ArrayList<>();
+private static final AtomicInteger nextClientId = new AtomicInteger(1);
+private static final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
 
 private RoomManager roomManager;
 
 
 public ClientHandler(Socket socket) {
     this.socket = socket;
-    this.clientId = nextClientId++;
+    this.clientId = nextClientId.getAndIncrement();
     this.roomManager = Server.roomManager;
     this.commandProcessor = new CommandProcessor(this);
     
@@ -88,6 +89,18 @@ public static ClientHandler findClientByUsername(String username) {
     return null;
 }
 
+private static synchronized boolean registerClient(ClientHandler client, String username) {
+
+    if (findClientByUsername(username) != null) {
+        return false;
+    }
+
+    client.username = username;
+    clients.add(client);
+
+    return true;
+}
+
 @Override
 public void run() {
     System.out.print("Handling client: " + clientId + " : " + socket.getInetAddress().getHostAddress());
@@ -102,20 +115,20 @@ public void run() {
         writer.println("Enter your username:");
 
        while (true) {
-            username = reader.readLine();
+            String requestedUsername = reader.readLine();
 
-            if (username == null) {
-               return;
+            if (requestedUsername == null) {
+                return;
             }
 
-            username = username.trim();
+            requestedUsername = requestedUsername.trim();
 
-            if (username.isEmpty()) {
+            if (requestedUsername.isEmpty()) {
                writer.println("User name cannot be empty. Try again: ");
                continue;
             }
 
-            if (findClientByUsername(username) != null) {
+            if (!registerClient(this, requestedUsername)) {
                writer.println("User name is already taken. Try another: ");
                continue;
             }
@@ -123,7 +136,7 @@ public void run() {
             break;
         }
 
-        clients.add(this);
+        
 
         while (running && (message = reader.readLine()) != null) {
             System.out.println("RAW MESSAGE RECEIVED >>> " + message);
@@ -136,6 +149,7 @@ public void run() {
 
     } finally {
         clients.remove(this);
+        roomManager.removeClientFromAllRooms(this);
 
         try {
             reader.close();

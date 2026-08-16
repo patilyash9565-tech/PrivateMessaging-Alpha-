@@ -1,5 +1,5 @@
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Room{
     private String name;
@@ -10,18 +10,31 @@ public class Room{
     public Room(String name, ClientHandler owner){
         this.name = name ;
         this.owner = owner;
-        this.members = new ArrayList<>();
+        this.members = new CopyOnWriteArrayList<>();
         this.members.add(owner);
     }
 
-    public void addMember(ClientHandler client){
+    public synchronized void addMember(ClientHandler client){
         if(!members.contains(client)){
         members.add(client);
         }
     }
 
-    public void removeMember(ClientHandler client) {
+    public synchronized void removeMember(ClientHandler client) {
+        boolean wasOwner = (owner == client);
         members.remove(client);
+        if (wasOwner){
+            if(!members.isEmpty()){
+                owner = members.get(0);
+            }
+            else{
+                owner = null;
+            }
+        }
+    }
+
+    public boolean isEmpty(){
+        return members.isEmpty();
     }
 
     public boolean hasMember(ClientHandler client){

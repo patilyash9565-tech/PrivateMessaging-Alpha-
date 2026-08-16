@@ -10,6 +10,8 @@ public class CommandProcessor {
 
     public void process(String message) {
 
+        message = message.trim();
+
         if (message.startsWith("/msg ")) {
             processPrivateMessage(message);
 

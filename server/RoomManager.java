@@ -9,13 +9,13 @@ public class RoomManager {
     this.rooms = new ArrayList<>();
     }
 
-    public void addRoom(Room room) {
+    public synchronized void addRoom(Room room) {
         if (findRoom(room.getName()) == null){
         rooms.add(room);
         }
     }
 
-    public Room createRoom(String roomName, ClientHandler owner) {
+    public synchronized Room createRoom(String roomName, ClientHandler owner) {
         if (findRoom(roomName)!=null){
             return null;
         }
@@ -25,7 +25,7 @@ public class RoomManager {
         return room;
     }
 
-    public boolean deleteRoom(String roomName, ClientHandler requester) {
+    public synchronized boolean deleteRoom(String roomName, ClientHandler requester) {
         Room room = findRoom(roomName);
 
         if (room == null){
@@ -41,7 +41,7 @@ public class RoomManager {
 
     }
 
-    public Room findRoom(String roomName) {
+    public synchronized Room findRoom(String roomName) {
       for (Room room : rooms) {
           if (room.getName().equalsIgnoreCase(roomName)) {
               return room;
@@ -51,9 +51,15 @@ public class RoomManager {
         
     }
 
-    public List<Room>getRooms(){
-        return rooms; 
+    public synchronized void removeClientFromAllRooms(ClientHandler client) {
+        rooms.removeIf(room -> {
+        room.removeMember(client);
+        return room.isEmpty();
+        });
     }
 
+    public synchronized List<Room> getRooms() {
+    return new ArrayList<>(rooms);
+}
     
 }
