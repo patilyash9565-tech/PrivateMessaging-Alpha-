@@ -21,18 +21,16 @@ public class Room{
     }
 
     public synchronized void removeMember(ClientHandler client) {
+
         boolean wasOwner = (owner == client);
+
         members.remove(client);
-        if (wasOwner){
-            if(!members.isEmpty()){
-                owner = members.get(0);
-            }
-            else{
-                owner = null;
-            }
+
+        if (wasOwner && !members.isEmpty()) {
+            owner = members.get(0);
         }
     }
-
+    
     public boolean isEmpty(){
         return members.isEmpty();
     }
