@@ -44,6 +44,10 @@ public void sendMessage(String message) {
     writer.println(message);
 }
 
+public long getUserId() {
+    return userId;
+}
+
 
 public String getUsername() {
     return username;

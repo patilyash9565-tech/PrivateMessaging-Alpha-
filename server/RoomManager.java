@@ -16,29 +16,50 @@ public class RoomManager {
     }
 
     public synchronized Room createRoom(String roomName, ClientHandler owner) {
-        if (findRoom(roomName)!=null){
+
+        if (findRoom(roomName) != null) {
             return null;
         }
-        Room room = new Room(roomName, owner);
+
+        Long existingRoomId = DatabaseManager.findRoomIdByName(roomName);
+
+        if (existingRoomId != null) {
+            return null;
+        }
+
+        Long roomId = DatabaseManager.createRoom(roomName,owner.getUserId());
+
+        if (roomId == null) {
+            return null;
+        }
+
+        Room room = new Room(roomId, roomName, owner);
         rooms.add(room);
 
         return room;
     }
 
-    public synchronized boolean deleteRoom(String roomName, ClientHandler requester) {
+    public synchronized boolean deleteRoom(String roomName,ClientHandler requester) {
+
         Room room = findRoom(roomName);
 
-        if (room == null){
+        if (room == null) {
             return false;
         }
 
-        if (room.getOwner()!= requester){
+        if (room.getOwner() != requester) {
+            return false;
+        }
+
+        boolean deletedFromDatabase = DatabaseManager.deleteRoom(room.getRoomId());
+
+        if (!deletedFromDatabase) {
             return false;
         }
 
         rooms.remove(room);
+  
         return true;
-
     }
 
     public synchronized Room findRoom(String roomName) {

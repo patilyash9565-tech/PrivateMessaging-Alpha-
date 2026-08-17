@@ -3,15 +3,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Room{
     private String name;
+    private long roomId;
     private ClientHandler owner;
     private List<ClientHandler>members;
     
 
-    public Room(String name, ClientHandler owner){
-        this.name = name ;
-        this.owner = owner;
-        this.members = new CopyOnWriteArrayList<>();
-        this.members.add(owner);
+    public Room(long roomId, String name, ClientHandler owner){
+    this.roomId = roomId;
+    this.name = name;
+    this.owner = owner;
+    this.members = new CopyOnWriteArrayList<>();
+    this.members.add(owner);
+    }
+
+    public long getRoomId() {
+    return roomId;
     }
 
     public synchronized void addMember(ClientHandler client){
