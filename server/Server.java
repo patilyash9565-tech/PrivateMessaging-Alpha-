@@ -4,9 +4,18 @@ import java.net.Socket;
 
 public class Server {
 
-      static RoomManager roomManager = new RoomManager();
+    static RoomManager roomManager = new RoomManager();
 
   public static void main(String[]args){
+
+    try {
+        DatabaseManager.getConnection().close();
+        System.out.println("Database connected successfully.");
+    } 
+    catch (Exception e) {
+        System.out.println("Database connection failed.");
+        e.printStackTrace();
+    }
 
     
 

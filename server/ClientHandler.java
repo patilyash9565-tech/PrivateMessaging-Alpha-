@@ -14,6 +14,7 @@ private PrintWriter writer;
 
 private int clientId;
 private String username;
+private long userId;
 
 private CommandProcessor commandProcessor;
 
@@ -132,6 +133,24 @@ public void run() {
                writer.println("User name is already taken. Try another: ");
                continue;
             }
+
+            Long existingUserId = DatabaseManager.findUserIdByUsername(requestedUsername);
+
+            if (existingUserId != null) {
+                userId = existingUserId;
+            } else {
+                Long newUserId = DatabaseManager.createUser(requestedUsername);
+
+                if (newUserId == null) {
+                    writer.println("Could not create persistent user.");
+                    clients.remove(this);
+                    return;
+                }
+
+                userId = newUserId;
+            }
+
+            System.out.println("Persistent user: " + requestedUsername + " -> userId " + userId);
 
             break;
         }
